@@ -13,7 +13,7 @@
 
 **Embed snippet:** [Skip to the iframe code](#embed-on-your-own-site)
 
-![Wales Interactive Map UI — filter bar with 18 toggleable categories, map of Wales with pins, an open popup card showing Pen y Fan with description and Read More button, nearby suggestions, and the categories legend panel](Wales-Interactive-Map.png)
+![Wales Interactive Map embed — partner-safe view at wales.org/embed/ showing the dark header with "Designed by Wales.org" attribution, the 18-category filter bar, marker-clustered pins across mid-Wales, the categories legend panel, and the clean footer with no affiliate buttons](wales-map-embed.png)
 
 ---
 
