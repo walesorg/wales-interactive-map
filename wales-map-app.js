@@ -4,6 +4,11 @@ function initWalesMap(){
   if(typeof L==='undefined'){setTimeout(initWalesMap,100);return}
   var VIA='https://www.viator.com/en-GB/Wales/d5157-ttd?pid=P00047633&mcid=42383&medium=link&campaign=InteractiveMap';
   var COT='https://www.awin1.com/cread.php?awinmid=5796&awinaffid=868127&ued=https%3A%2F%2Fwww.holidaycottages.co.uk%2F';
+  // Detect if the map is embedded on a third-party site (inside an iframe).
+  // When embedded we hide our own affiliate buttons so partners (cottage operators,
+  // experience-day providers, DMOs) can use the embed without it competing with their
+  // own bookings. The "Read More" link to the Wales.org guide remains in both modes.
+  var IS_EMBED=(function(){try{return window.self!==window.top}catch(e){return true}})();
   var CC={castle:'#8b6914',beach:'#2e86ab',hiking:'#3a7d44',cycling:'#d97706',water:'#0891b2',wildlife:'#5b8c5a',food:'#be3144',museum:'#7c3aed',stay:'#b8860b',garden:'#16a34a',festival:'#db2777',family:'#ec4899',town:'#475569',railway:'#78716c',adventure:'#ea580c',restaurant:'#d94f30',pub:'#b45309',cafe:'#c2410c'};
   var CL={castle:'Castle',beach:'Beach',hiking:'Hiking',cycling:'Cycling',water:'Water Sports',wildlife:'Wildlife',food:'Food & Drink',museum:'Museum',stay:'Accommodation',garden:'Garden',festival:'Festival',family:'Family',town:'Town',railway:'Railway',adventure:'Adventure',restaurant:'Restaurant',pub:'Pub',cafe:'Cafe'};
   var P=[
@@ -201,10 +206,19 @@ function initWalesMap(){
 
   var map=L.map('walesmap',{zoomControl:false,scrollWheelZoom:true}).setView([52.2,-3.8],7);
   L.control.zoom({position:'topleft'}).addTo(map);
+  L.control.fullscreen({position:'topleft',pseudoFullscreen:true,title:'Expand map',titleCancel:'Exit fullscreen',forceSeparateButton:true}).addTo(map);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:18}).addTo(map);
 
   var markers=[];
-  function makeIcon(cat){var c=CC[cat]||'#475569';return L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50% 50% 50% 0;background:'+c+';transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);"></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]})}
+  function makeIcon(cat,pin){
+    if(pin&&pin.premium){
+      var initials=(pin.n||'').split(' ').slice(0,2).map(function(w){return w[0]||''}).join('').toUpperCase();
+      var logoHtml=pin.logo?'<img src="'+pin.logo+'" />'+'':'<span>'+initials+'</span>';
+      return L.divIcon({className:'',html:'<div class="wm-premium-pin"><div class="wm-premium-circle">'+logoHtml+'</div><div class="wm-premium-badge">Featured</div><div class="wm-premium-name">'+pin.n+'</div></div>',iconSize:[120,68],iconAnchor:[60,68],popupAnchor:[0,-70]})
+    }
+    var c=CC[cat]||'#475569';
+    return L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50% 50% 50% 0;background:'+c+';transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);"></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]})
+  }
 
   // Haversine distance in miles
   function distMi(lat1,lng1,lat2,lng2){
@@ -244,10 +258,24 @@ function initWalesMap(){
   }
 
   function popup(p,pIdx){
+    if(p.premium){
+      var stars='★★★★★'.slice(0,Math.round(p.rating||5));
+      var tagsHtml=(p.tags||[]).map(function(t){return'<span class="wm-pop-prem-tag">'+t+'</span>'}).join('');
+      var heroHtml=p.photo?'<img class="hero" src="'+p.photo+'" alt="'+p.n+'" />':'';
+      var logoInner=p.logo?'<img src="'+p.logo+'" alt="'+p.n+' logo" />':((p.n||'').split(' ').slice(0,2).map(function(w){return w[0]||''}).join('').toUpperCase());
+      var metaHtml='';
+      if(p.address)metaHtml+='<div>'+p.address+'</div>';
+      if(p.phone)metaHtml+='<div>'+p.phone+'</div>';
+      if(p.price)metaHtml+='<div>'+p.price+'</div>';
+      return '<div class="wm-pop-premium"><div class="wm-pop-prem-hero">'+heroHtml+'<div class="wm-pop-prem-fbadge">Featured</div><div class="wm-pop-prem-logorow"><div class="wm-pop-prem-logo">'+logoInner+'</div><div><div class="wm-pop-prem-bizname">'+p.n+'</div><div class="wm-pop-prem-biztype">'+(p.biztype||'')+(p.area?' &middot; '+p.area:'')+'</div></div></div></div><div class="wm-pop-prem-body"><div class="wm-pop-prem-stars">'+stars+'<span>'+(p.rating?p.rating+'/5':'')+' '+(p.reviews?'('+p.reviews+' reviews)':'')+'</span></div><div class="wm-pop-prem-desc">'+p.desc+'</div><div class="wm-pop-prem-tags">'+tagsHtml+'</div>'+(metaHtml?'<div class="wm-pop-prem-meta">'+metaHtml+'</div>':'')+'<div class="wm-pop-prem-btns">'+(p.bookingUrl?'<a class="wm-pop-prem-book" href="'+p.bookingUrl+'" target="_blank" rel="noopener">Book Now</a>':'')+(p.url?'<a class="wm-pop-prem-web" href="'+p.url+'" target="_blank" rel="noopener">Website</a>':'')+'</div></div><div class="wm-pop-prem-foot"><span>Powered by Wales.org</span><span>Premium listing</span></div></div>';
+    }
     var col=CC[p.cat]||'#475569';var label=CL[p.cat]||p.cat;
     var lk=p.url?'<a href="'+p.url+'" target="_blank" rel="noopener">Read More</a>':'<a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.n+' Wales')+'" target="_blank" rel="noopener">View on Google</a>';
-    lk+='<a href="'+VIA+'" target="_blank" rel="noopener sponsored">Experiences</a>';
-    if(['stay','town','beach','hiking','castle'].indexOf(p.cat)>-1)lk+='<a href="'+COT+'" target="_blank" rel="noopener sponsored" class="wm-lc">Cottages</a>';
+    // Affiliate buttons hidden when embedded on partner sites (see IS_EMBED at top of file)
+    if(!IS_EMBED){
+      lk+='<a href="'+VIA+'" target="_blank" rel="noopener sponsored">Experiences</a>';
+      if(['stay','town','beach','hiking','castle'].indexOf(p.cat)>-1)lk+='<a href="'+COT+'" target="_blank" rel="noopener sponsored" class="wm-lc">Cottages</a>';
+    }
     // Build nearby section
     var nearby=getNearby(p,pIdx);
     var nb='';
@@ -263,7 +291,7 @@ function initWalesMap(){
     return '<div class="wm-pop"><div class="wm-pop-border" style="background:'+col+'"></div><div class="wm-pop-body"><div class="wm-pop-cat" style="color:'+col+'">'+label+'</div><div class="wm-pop-title">'+p.n+'</div><div class="wm-pop-desc">'+p.desc+'</div><div class="wm-pop-links">'+lk+'</div>'+nb+'</div></div>';
   }
 
-  function addPin(p,idx){var m=L.marker([p.lat,p.lng],{icon:makeIcon(p.cat)});m._pd=p;m._pidx=idx;m.bindPopup('',{maxWidth:300,closeButton:true});markers.push(m);return m}
+  function addPin(p,idx){var m=L.marker([p.lat,p.lng],{icon:makeIcon(p.cat,p)});m._pd=p;m._pidx=idx;m.bindPopup('',{maxWidth:p.premium?320:300,closeButton:true});markers.push(m);return m}
   var group;
   try{group=L.markerClusterGroup({maxClusterRadius:45,spiderfyOnMaxZoom:true,showCoverageOnHover:false,zoomToBoundsOnClick:true,disableClusteringAtZoom:14,chunkedLoading:true})}catch(e){group=L.layerGroup()}
   P.forEach(function(p,idx){var m=addPin(p,idx);group.addLayer(m)});
@@ -498,3 +526,4 @@ function initWalesMap(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initWalesMap);else initWalesMap();
 })();
+
