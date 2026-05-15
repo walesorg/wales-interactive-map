@@ -67,6 +67,7 @@ A fully interactive map of Wales featuring 1,963 location pins across 18 categor
 - **Partner-safe** — automatic affiliate-button hiding in embed contexts (see above)
 - **WordPress-ready** — runs inside a Gutenberg Custom HTML block, no plugin needed
 - **Standalone-ready** — works as a static HTML page on any web server, no backend required
+- - **Fullscreen mode** — expandable to full-viewport via Leaflet.fullscreen; works inside iframe embeds without requiring `allow="fullscreen"` on the host page
 
 ---
 
@@ -144,6 +145,8 @@ No server-side API calls, no database queries, no latency.
    ```html
    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+   <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.css" />
+   <script src="https://unpkg.com/leaflet.fullscreen@3.0.2/Control.FullScreen.js"></script>
    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
